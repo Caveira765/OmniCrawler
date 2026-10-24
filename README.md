@@ -1,33 +1,33 @@
-# OmniCrawler Studio 🕷️
+# OmniCrawler Studio
 
-> **Multi-Engine Local Web Crawler & Selective Archiver** com visualizador interativo em Canvas sincronizado com a taxa de atualização (Hz) do monitor.
+> Multi-Engine Local Web Crawler & Selective Archiver com visualizador interativo em Canvas sincronizado com a taxa de atualização (Hz) do monitor.
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
-- **4 Motores de Crawling Locais & Gratuitos**:
+- **4 Motores de Crawling Locais e Gratuitos**:
   - `Auto`: Modo híbrido inteligente.
   - `Crawl4AI`: Renderização dinâmica com Playwright, limpeza de ruídos e conversão para Markdown puro.
-  - `Playwright Stealth`: Navegador Chromium headless completo com suporte a rolagem automática, Screenshot em resolução total (PNG) e impressão em PDF.
+  - `Playwright Stealth`: Navegador Chromium headless com suporte a rolagem automática, captura em resolução total (PNG) e impressão em PDF.
   - `Trafilatura + HTTPX`: Extração ultrarrápida (~0.4s) direta de corpo de texto, notícias e documentações.
   - `Scrapy / Parsel`: Extração via seletores CSS/XPath customizados, tabelas e dados estruturados JSON-LD.
 - **Simulador Físico de Varredura (Hz-Synced)**:
-  - Animação procedimental de aranha com cinemática inversa (8 patas articuladas).
+  - Animação procedimental com cinemática inversa (8 patas articuladas).
   - Coleta visual item a item pela árvore DOM (Títulos, Parágrafos, Mídias, Tabelas, Links) sincronizada com o refresh rate do monitor (60Hz a 240Hz+).
   - Controles interativos: pausar, avançar passo a passo, guiar com o cursor do mouse e velocidade ajustável.
-- **Arquivamento Seletivo & Modular**:
+- **Arquivamento Seletivo e Modular**:
   - Escolha exatamente o que salvar sob demanda: Markdown/Texto limpo, HTML bruto original, capturas visuais (PNG/PDF), tabelas (CSV/JSON), lista de links e download de arquivos de mídia.
   - Banco de dados local SQLite (`omnicrawler.db`) para histórico e exportação em formato `.zip`.
 - **Interface Gráfica**:
-  - Estilização dark mode limpa e funcional (Zinc/Carbon).
+  - Estilização dark mode sóbria e funcional (Zinc/Carbon).
   - Pesquisa em tempo real dentro do conteúdo extraído.
   - Alternador entre Código Markdown e Modo Leitura Formatada.
   - Estimativa de tokens para modelos de linguagem (LLMs) e botão de cópia formatada para prompts de IA.
 
 ---
 
-## 🛠️ Instalação e Execução
+## Instalação e Execução
 
 ### Pré-requisitos
 - Python 3.10 ou superior
@@ -67,7 +67,7 @@
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 OmniCrawler/
@@ -78,11 +78,11 @@ OmniCrawler/
 ├── Iniciar_OmniCrawler.bat # Script de inicialização rápida no Windows
 └── static/
     ├── index.html          # Interface gráfica (HTML5/CSS3/Vanilla JS)
-    └── spider_sim.js       # Motor gráfico da aranha e animação física em Canvas
+    └── spider_sim.js       # Motor gráfico e animação física em Canvas
 ```
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto é disponibilizado sob a licença [MIT](LICENSE).
