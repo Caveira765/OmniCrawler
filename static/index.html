@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniCrawler Studio — Web Crawler &amp; Extrator Seletivo</title>
+  <style>
+    :root {
+      --bg-canvas: #09090b;
+      --bg-surface: #111113;
+      --bg-elevated: #18181b;
+      --bg-subtle: #202024;
+      --border-subtle: #27272a;
+      --border-strong: #3f3f46;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-sky: #38bdf8;
+      --status-ok: #10b981;
+      --status-err: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Custom Subtle Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-canvas);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Minimalist Architectural Header */
+    header {
+      background-color: rgba(17, 17, 19, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      display: grid;
+      place-items: center;
+      color: var(--text-primary);
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .brand h1 {
+      font-size: 0.96rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .status-dot-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .status-dot-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-ok);
+    }
+
+    .brand p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .kbd-hint {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      padding: 0.08rem 0.32rem;
+      border-radius: 4px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    /* Main Workspace Grid */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      max-width: 1920px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1140px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.15rem;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Form Controls & Validation (:user-invalid / :user-valid) */
+    .field {
+      margin-bottom: 0.95rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.79rem;
+      font-weight: 500;
+      margin-bottom: 0.22rem;
+      color: var(--text-primary);
+    }
+
+    .hint {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .error-msg {
+      display: none;
+      color: var(--status-err);
+      font-size: 0.74rem;
+      margin-top: 0.3rem;
+      font-weight: 500;
+    }
+
+    input[type="url"],
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.75rem;
+      font-size: 0.83rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--text-secondary);
+      box-shadow: 0 0 0 2px rgba(244, 244, 245, 0.06);
+    }
+
+    /* Modern Web Guidance: :user-invalid / :user-valid after interaction */
+    input:user-invalid,
+    input.user-invalid-fallback {
+      border-color: var(--status-err);
+      background-color: rgba(239, 68, 68, 0.06);
+    }
+
+    input:user-invalid + .error-msg,
+    input.user-invalid-fallback + .error-msg {
+      display: block;
+    }
+
+    .field:has(input:user-invalid) .hint {
+      color: #fca5a5;
+    }
+
+    input:user-valid,
+    input.user-valid-fallback {
+      border-color: var(--border-strong);
+    }
+
+    /* Quick URL Bookmarks */
+    .quick-urls-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.32rem;
+      flex-wrap: wrap;
+      margin-top: 0.42rem;
+    }
+
+    .url-pill {
+      background: var(--bg-canvas);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 0.14rem 0.45rem;
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+
+    .url-pill:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+      background: var(--bg-elevated);
+    }
+
+    /* Engine Selector Cards */
+    .engine-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.36rem;
+    }
+
+    .engine-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 0.68rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .engine-option:hover {
+      border-color: var(--border-strong);
+    }
+
+    .engine-option:has(input:checked) {
+      border-color: var(--text-primary);
+      background: var(--bg-elevated);
+    }
+
+    .engine-option input[type="radio"] {
+      margin-top: 0.22rem;
+      accent-color: var(--text-primary);
+    }
+
+    .engine-meta {
+      flex: 1;
+    }
+
+    .engine-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+
+    .engine-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      padding: 0.08rem 0.4rem;
+      border-radius: 4px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .engine-desc {
+      font-size: 0.71rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* Selective Save Box */
+    .save-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.8rem;
+      margin-top: 0.6rem;
+    }
+
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .btn-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.26rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+
+    .btn-chip:hover,
+    .btn-chip.active {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.36rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+      padding: 0.38rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      transition: border-color 0.14s, background-color 0.14s;
+    }
+
+    .check-item:has(input:checked) {
+      border-color: var(--border-strong);
+      background: var(--bg-elevated);
+    }
+
+    .check-item input[type="checkbox"] {
+      margin-top: 0.18rem;
+      accent-color: var(--text-primary);
+      width: 14px;
+      height: 14px;
+    }
+
+    .check-item small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.69rem;
+      margin-top: 0.04rem;
+    }
+
+    /* Live Expected Files Preview Box */
+    .files-preview-strip {
+      margin-top: 0.55rem;
+      padding: 0.45rem 0.55rem;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 0.69rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem;
+      align-items: center;
+    }
+
+    .file-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 0.06rem 0.36rem;
+      border-radius: 3px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .btn:hover:not(:disabled) {
+      border-color: var(--border-strong);
+      background: var(--bg-subtle);
+    }
+
+    .btn-primary {
+      background: var(--text-primary);
+      color: #09090b;
+      border-color: var(--text-primary);
+      width: 100%;
+      padding: 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #d4d4d8;
+      border-color: #d4d4d8;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    details.adv-details {
+      margin-top: 0.65rem;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.48rem 0.7rem;
+    }
+
+    details.adv-details summary {
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* Right Workspace Column */
+    .workspace-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    /* Spider Visualizer + Live Item-by-Item Feed Split Dock */
+    .spider-harvest-dock {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 0.95rem;
+    }
+
+    .spider-dock-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .spider-split-view {
+      display: grid;
+      grid-template-columns: 1.38fr 1fr;
+      gap: 0.85rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 1320px) {
+      .spider-split-view {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .spider-canvas-container {
+      position: relative;
+      height: 330px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: #09090b;
+      cursor: crosshair;
+    }
+
+    .spider-canvas-container canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-footer-hint {
+      position: absolute;
+      bottom: 7px;
+      left: 10px;
+      background: rgba(9, 9, 11, 0.88);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 0.18rem 0.5rem;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    /* Live Harvested Items Feed ("Pegando um por um") */
+    .harvest-feed-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      height: 330px;
+      overflow: hidden;
+    }
+
+    .harvest-feed-header {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .harvest-feed-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.36rem;
+    }
+
+    .harvest-item-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 2.5px solid var(--text-primary);
+      border-radius: 5px;
+      padding: 0.42rem 0.6rem;
+      font-size: 0.74rem;
+      animation: slideInItem 0.22s ease-out;
+      cursor: pointer;
+      transition: background-color 0.14s, border-color 0.14s;
+    }
+
+    .harvest-item-card:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-strong);
+    }
+
+    @keyframes slideInItem {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .harvest-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .harvest-tag {
+      font-family: var(--font-mono);
+      font-size: 0.67rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Telemetry Metrics Bar */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.62rem 0.85rem;
+    }
+
+    .stat-label {
+      font-size: 0.67rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 0.12rem;
+    }
+
+    /* Selective Save Action Bar */
+    .save-toolbar {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 0.72rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    /* Navigation Tabs */
+    .tabs-bar {
+      display: flex;
+      gap: 0.35rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 0.42rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .tab-content {
+      display: none;
+      margin-top: 0.85rem;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Code & Reader Viewers */
+    .code-viewer {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.95rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 540px;
+      overflow-y: auto;
+      color: #d4d4d8;
+    }
+
+    .reader-viewer {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.35rem 1.6rem;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      max-height: 540px;
+      overflow-y: auto;
+      color: #e4e4e7;
+      display: none;
+    }
+
+    .reader-viewer h1,
+    .reader-viewer h2,
+    .reader-viewer h3 {
+      color: var(--text-primary);
+      margin: 1.1rem 0 0.45rem;
+      font-weight: 600;
+    }
+
+    .reader-viewer p {
+      margin-bottom: 0.75rem;
+      color: #d4d4d8;
+    }
+
+    .reader-viewer a {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+
+    .reader-viewer code {
+      font-family: var(--font-mono);
+      background: var(--bg-elevated);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+
+    .screenshot-frame {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--bg-canvas);
+      max-height: 540px;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .screenshot-frame img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      cursor: zoom-in;
+    }
+
+    /* Data Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--border-subtle);
+      padding: 0.46rem 0.65rem;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Media Assets Grid */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.65rem;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .media-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.38rem;
+      font-size: 0.73rem;
+    }
+
+    .media-thumb {
+      width: 100%;
+      height: 105px;
+      object-fit: contain;
+      background: #050507;
+      border-radius: 4px;
+    }
+
+    /* Toast Notification Stack */
+    #toastContainer {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 380px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      pointer-events: auto;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-left: 3px solid var(--text-primary);
+      color: var(--text-primary);
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      animation: slideInItem 0.2s ease-out;
+    }
+
+    /* Modern Web Guidance: Animate Elements To and From Top Layer */
+    dialog {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      max-width: 980px;
+      width: 94%;
+      margin: auto;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+      opacity: 0;
+      transform: scale(0.95);
+      transition-property: opacity, transform, display, overlay;
+      transition-duration: 0.22s;
+      transition-timing-function: ease-out;
+      transition-behavior: allow-discrete;
+    }
+
+    dialog::backdrop {
+      background-color: rgba(0, 0, 0, 0);
+      backdrop-filter: blur(0px);
+      transition-property: background-color, backdrop-filter, display, overlay;
+      transition-duration: 0.22s;
+      transition-timing-function: ease-out;
+      transition-behavior: allow-discrete;
+    }
+
+    :is(dialog[open]):where(:not([data-closing])) {
+      opacity: 1;
+      transform: scale(1);
+
+      @starting-style {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      &::backdrop {
+        background-color: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+
+        @starting-style {
+          background-color: rgba(0, 0, 0, 0);
+          backdrop-filter: blur(0px);
+        }
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      dialog {
+        transform: none;
+        transition-duration: 0.08s;
+      }
+      @starting-style {
+        dialog[open] {
+          transform: none;
+        }
+      }
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.65rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .stage-progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 0.75rem 0;
+    }
+
+    .stage-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--text-primary);
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FLOATING TOAST NOTIFICATIONS -->
+  <div id="toastContainer" aria-live="polite"></div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v7m0 6v7M4.93 4.93l4.95 4.95m4.24 4.24 4.95 4.95M2 12h7m6 0h7M4.93 19.07l4.95-4.95m4.24-4.24 4.95-4.95"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title-row">
+          <h1>OmniCrawler Studio</h1>
+          <span class="status-dot-pill">4 MOTORES ATIVOS</span>
+        </div>
+        <p>Extrator Multi-Motor &amp; Simulador Físico de Varredura DOM</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn" onclick="openSpiderStageModalManual()">
+        Janela de Varredura
+      </button>
+      <button type="button" class="btn" onclick="document.getElementById('enginesDialog').showModal()">
+        Motores &amp; Disco
+      </button>
+      <button type="button" class="btn" onclick="openRootSavedFolder()">
+        Diretório de Salvos
+      </button>
+      <button type="button" class="btn" onclick="switchTab('tab-history'); loadHistory();">
+        Histórico (<span id="historyCountBadge">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT COLUMN: CONFIGURATION -->
+    <section class="panel">
+      <div class="section-label">
+        <span>Configuração da Requisição</span>
+        <span class="kbd-hint" title="Atalho para iniciar varredura">Ctrl + Enter</span>
+      </div>
+
+      <form id="crawlForm" novalidate>
+        <!-- URL Input following validate-input-after-interaction guidance -->
+        <div class="field">
+          <label for="targetUrl">URL Alvo</label>
+          <span id="url-hint" class="hint">Formato: https://exemplo.com (suporta SPAs, portais, artigos e documentações)</span>
+          <input
+            type="url"
+            id="targetUrl"
+            name="targetUrl"
+            required
+            placeholder="https://en.wikipedia.org/wiki/Web_crawler"
+            value="https://en.wikipedia.org/wiki/Web_crawler"
+            aria-describedby="url-hint"
+            aria-errormessage="url-error"
+          />
+          <div id="url-error" class="error-msg">
+            Informe uma URL válida iniciando com http:// ou https://
+          </div>
+
+          <div class="quick-urls-bar">
+            <span style="font-size: 0.67rem; color: var(--text-muted);">Exemplos:</span>
+            <button type="button" class="url-pill" onclick="crawlThisUrl('https://en.wikipedia.org/wiki/Web_crawler')">Wikipedia</button>
+            <button type="button" class="url-pill" onclick="crawlThisUrl('https://quotes.toscrape.com/')">Quotes to Scrape</button>
+            <button type="button" class="url-pill" onclick="crawlThisUrl('https://books.toscrape.com/')">Books to Scrape</button>
+            <button type="button" class="url-pill" onclick="crawlThisUrl('https://news.ycombinator.com/')">Hacker News</button>
+          </div>
+        </div>
+
+        <!-- Spider Visualization Mode -->
+        <div class="field" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.65rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+            <label style="margin: 0; font-size: 0.74rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
+              Simulação da Aranha (Hz Sync)
+            </label>
+            <select id="spiderSpeedSelect" onchange="changeSpiderSpeed(this.value)" style="width: auto; padding: 0.16rem 0.45rem; font-size: 0.71rem;">
+              <option value="0.6">Velocidade 0.6x (Lenta)</option>
+              <option value="1.0" selected>Velocidade 1.0x (Realista)</option>
+              <option value="1.6">Velocidade 1.6x (Rápida)</option>
+              <option value="2.5">Velocidade 2.5x (Turbo)</option>
+            </select>
+          </div>
+          <label class="check-item" style="margin-bottom: 0.35rem;">
+            <input type="checkbox" id="showInitialSpiderModalToggle" checked />
+            <div>
+              <strong>Abrir janela da aranha coletando item por item</strong>
+              <small>Exibe a aranha percorrendo a página e capturando cada bloco antes de liberar os dados</small>
+            </div>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="keepSideSpiderToggle" checked onchange="toggleSideSpiderVisibility()" />
+            <div>
+              <strong>Manter painel da aranha e feed ao vivo na tela</strong>
+              <small>Mostra a página e os itens sendo capturados um por um no topo do painel direito</small>
+            </div>
+          </label>
+        </div>
+
+        <!-- Engine Selector -->
+        <div class="field">
+          <label>1. Motor de Extração (Gratuitos / Locais)</label>
+          <div class="engine-cards" id="engineSelectorList" onchange="onEngineRadioChange()">
+            <label class="engine-option">
+              <input type="radio" name="engine" value="auto" checked />
+              <div class="engine-meta">
+                <div class="engine-header-row">
+                  <span class="engine-name">Auto (Híbrido Recomendado)</span>
+                  <span class="tag-pill">AUTO</span>
+                </div>
+                <div class="engine-desc">Seleciona automaticamente entre Crawl4AI/Playwright ou Seletores.</div>
+              </div>
+            </label>
+
+            <label class="engine-option">
+              <input type="radio" name="engine" value="crawl4ai" />
+              <div class="engine-meta">
+                <div class="engine-header-row">
+                  <span class="engine-name">Crawl4AI</span>
+                  <span class="tag-pill">MARKDOWN / IA</span>
+                </div>
+                <div class="engine-desc">Renderiza JS, remove ruídos e gera Markdown limpo + Screenshot/PDF.</div>
+              </div>
+            </label>
+
+            <label class="engine-option">
+              <input type="radio" name="engine" value="playwright" />
+              <div class="engine-meta">
+                <div class="engine-header-row">
+                  <span class="engine-name">Playwright Full Browser</span>
+                  <span class="tag-pill">HEADLESS JS</span>
+                </div>
+                <div class="engine-desc">Navegador Chromium completo com rolagem automática, PNG e PDF.</div>
+              </div>
+            </label>
+
+            <label class="engine-option">
+              <input type="radio" name="engine" value="trafilatura" />
+              <div class="engine-meta">
+                <div class="engine-header-row">
+                  <span class="engine-name">Trafilatura + HTTPX</span>
+                  <span class="tag-pill">LEVE / ~0.4s</span>
+                </div>
+                <div class="engine-desc">Extração direta sem abrir navegador. Ideal para artigos e textos.</div>
+              </div>
+            </label>
+
+            <label class="engine-option">
+              <input type="radio" name="engine" value="scrapy_parsel" />
+              <div class="engine-meta">
+                <div class="engine-header-row">
+                  <span class="engine-name">Scrapy / Parsel Engine</span>
+                  <span class="tag-pill">CSS / XPATH</span>
+                </div>
+                <div class="engine-desc">Núcleo de seletores do Scrapy para tabelas, JSON-LD e subpáginas.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Deep Crawl Toggle -->
+        <div class="field">
+          <label class="check-item">
+            <input type="checkbox" id="followLinksToggle" onchange="toggleDeepCrawlOptions()" />
+            <div>
+              <strong>Seguir links internos (Deep Crawl)</strong>
+              <small>Desmarcado = varre apenas a URL informada. Marcado = navega pelas subpáginas.</small>
+            </div>
+          </label>
+
+          <div id="deepCrawlBox" style="display: none; margin-top: 0.5rem; padding: 0.7rem; background: var(--bg-canvas); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div class="row-2col">
+              <div>
+                <label for="maxPagesInput">Limite de Páginas</label>
+                <input type="number" id="maxPagesInput" value="5" min="1" max="50" />
+              </div>
+              <div>
+                <label for="maxDepthInput">Profundidade</label>
+                <input type="number" id="maxDepthInput" value="1" min="1" max="4" />
+              </div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+              <label for="urlPatternInput">Filtro de Sub-rota (Opcional)</label>
+              <input type="text" id="urlPatternInput" placeholder="Ex: /wiki/ ou /docs/" />
+            </div>
+            <label class="check-item" style="margin-top: 0.45rem;">
+              <input type="checkbox" id="sameDomainOnly" checked />
+              <span>Restringir ao mesmo domínio</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Selective Save Configuration -->
+        <div class="save-box">
+          <div class="section-label" style="margin-bottom: 0.5rem;">
+            <span>2. Seleção Modular de Salvamento</span>
+            <span class="kbd-hint" title="Atalho para salvar">Ctrl + S</span>
+          </div>
+
+          <div class="preset-pills">
+            <button type="button" class="btn-chip" onclick="applySavePreset('clean_only')">
+              Só Conteúdo Limpo
+            </button>
+            <button type="button" class="btn-chip" onclick="applySavePreset('clean_and_visual')">
+              Conteúdo + Original &amp; Visual
+            </button>
+            <button type="button" class="btn-chip" onclick="applySavePreset('all')">
+              Selecionar Tudo
+            </button>
+          </div>
+
+          <div class="checkbox-list">
+            <label class="check-item">
+              <input type="checkbox" id="optSaveClean" checked />
+              <div>
+                <strong>Conteúdo Limpo &amp; Estruturado</strong>
+                <small>Gera Markdown limpo, texto puro e metadados JSON</small>
+              </div>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="optSaveOriginalHtml" />
+              <div>
+                <strong>Página Original (HTML Bruto)</strong>
+                <small>Salva o código-fonte HTML completo da página</small>
+              </div>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="optSaveVisual" />
+              <div>
+                <strong>Captura Visual (Screenshot PNG + PDF)</strong>
+                <small>Salva imagem de página inteira e documento PDF</small>
+              </div>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="optSaveTablesLinks" checked />
+              <div>
+                <strong>Tabelas HTML &amp; Lista de Links</strong>
+                <small>Exporta tabelas e links em arquivos CSV e JSON</small>
+              </div>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="optSaveMedia" />
+              <div>
+                <strong>Download de Mídias e Documentos</strong>
+                <small>Baixa imagens, PDFs e arquivos para a subpasta de mídias</small>
+              </div>
+            </label>
+          </div>
+
+          <!-- Live File Output Preview -->
+          <div class="files-preview-strip" id="expectedFilesPreview">
+            <span>Arquivos a gerar:</span>
+          </div>
+
+          <label class="check-item" style="margin-top: 0.55rem; border-color: var(--border-strong);">
+            <input type="checkbox" id="autoSaveToggle" />
+            <div>
+              <strong>Salvar automaticamente ao concluir a varredura</strong>
+              <small>Se desmarcado, você pode inspecionar tudo na tela antes de gravar no disco.</small>
+            </div>
+          </label>
+        </div>
+
+        <!-- Advanced Options -->
+        <details class="adv-details">
+          <summary>Parâmetros Avançados (Seletores CSS/XPath, Espera JS, Scroll)</summary>
+          <div style="margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.55rem;">
+            <div class="row-2col">
+              <div>
+                <label for="waitMsInput">Espera JS (ms)</label>
+                <input type="number" id="waitMsInput" value="1200" min="0" max="15000" step="200" />
+              </div>
+              <div>
+                <label for="maxMediaInput">Máx. Mídias</label>
+                <input type="number" id="maxMediaInput" value="35" min="1" max="200" />
+              </div>
+            </div>
+            <div>
+              <label for="customCssInput">Seletor CSS Específico (Opcional)</label>
+              <input type="text" id="customCssInput" placeholder="Ex: article.main, div.content p" />
+            </div>
+            <div>
+              <label for="customXpathInput">Expressão XPath (Opcional)</label>
+              <input type="text" id="customXpathInput" placeholder="Ex: //h2/text()" />
+            </div>
+            <label class="check-item">
+              <input type="checkbox" id="scrollPageToggle" checked />
+              <span>Rolagem automática da página (carregar lazy-loading)</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="captureVisualsToggle" checked />
+              <span>Gerar Screenshot e PDF durante a navegação</span>
+            </label>
+          </div>
+        </details>
+
+        <div style="margin-top: 0.95rem;">
+          <button type="submit" id="runCrawlBtn" class="btn btn-primary">
+            Iniciar Varredura
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- RIGHT COLUMN: SPIDER HARVESTER + EXTRACTED DATA -->
+    <section class="workspace-col">
+      <!-- SPIDER NAVIGATOR & ITEM-BY-ITEM HARVEST FEED -->
+      <div class="spider-harvest-dock" id="sideSpiderDock">
+        <div class="spider-dock-top">
+          <div>
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">
+              Navegação Física da Aranha &amp; Coleta Item por Item
+            </strong>
+            <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 0.45rem;">
+              Passe o mouse ou clique sobre qualquer bloco na página para direcionar a aranha
+            </span>
+          </div>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            <button type="button" id="sidePauseBtn" class="btn-chip" onclick="toggleSpiderPause()">
+              Pausar
+            </button>
+            <button type="button" class="btn-chip" onclick="stepSpiderNext()">
+              Próximo Item →
+            </button>
+            <button type="button" id="sideFollowMouseBtn" class="btn-chip" onclick="toggleSideFollowMouse()">
+              Guiar Cursor: OFF
+            </button>
+            <button type="button" class="btn-chip" onclick="skipStepByStepHarvest()">
+              Coletar Todos
+            </button>
+            <button type="button" class="btn-chip" onclick="openSpiderStageModalManual()">
+              Expandir Janela
+            </button>
+          </div>
+        </div>
+
+        <div class="spider-split-view">
+          <div class="spider-canvas-container">
+            <canvas id="sideSpiderCanvas"></canvas>
+            <div class="canvas-footer-hint">
+              Scroll para percorrer a página • Clique em qualquer bloco para coletar imediatamente
+            </div>
+          </div>
+
+          <div class="harvest-feed-box">
+            <div class="harvest-feed-header">
+              <span>Itens Capturados (Clique para inspecionar)</span>
+              <span id="liveHarvestCounter" class="tag-pill">0 / 0</span>
+            </div>
+            <div class="harvest-feed-list" id="sideHarvestFeedList">
+              <div style="color: var(--text-muted); font-size: 0.75rem; padding: 0.75rem;">
+                Inicie uma varredura para observar a aranha percorrendo os elementos da página e adicionando cada item aqui um por um.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telemetry Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Motor Ativo</div>
+          <div class="stat-value" id="statEngine">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Páginas / Latência</div>
+          <div class="stat-value" id="statPagesTime">0 pág • 0s</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Palavras / ~Tokens IA</div>
+          <div class="stat-value" id="statWords">0 / 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tabelas Extraídas</div>
+          <div class="stat-value" id="statTables">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Links (Int / Ext)</div>
+          <div class="stat-value" id="statLinks">0 / 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Mídias Mapeadas</div>
+          <div class="stat-value" id="statMedia">0</div>
+        </div>
+      </div>
+
+      <!-- On-Demand Save Toolbar -->
+      <div class="save-toolbar" id="saveToolbar" style="display: none;">
+        <div>
+          <strong style="font-size: 0.83rem; color: var(--text-primary);">Arquivamento Seletivo Pronto</strong>
+          <p style="font-size: 0.73rem; color: var(--text-secondary);" id="saveSelectionSummaryText">
+            Selecione as categorias desejadas na coluna esquerda e grave no disco.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" id="saveSelectedBtn" class="btn btn-primary" style="width: auto; padding: 0.48rem 1rem;" onclick="saveCurrentJobSelection()">
+            Salvar Selecionados no Disco
+          </button>
+          <button type="button" id="openLastSavedFolderBtn" class="btn" style="display: none;" onclick="openLastSavedFolder()">
+            Abrir Pasta
+          </button>
+          <a id="downloadLastZipBtn" class="btn" style="display: none;" href="#" target="_blank">
+            Baixar .ZIP
+          </a>
+        </div>
+      </div>
+
+      <!-- Results Tabs Panel -->
+      <div class="panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div id="pageSwitcherBar" style="display: none; margin-bottom: 0.8rem; padding: 0.55rem 0.75rem; background: var(--bg-canvas); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); align-items: center; justify-content: space-between; gap: 0.75rem;">
+          <label for="crawledPageSelect" style="font-size: 0.78rem; font-weight: 500; color: var(--text-secondary);">
+            Página Inspecionada:
+          </label>
+          <select id="crawledPageSelect" onchange="renderSelectedPage()" style="max-width: 540px;"></select>
+        </div>
+
+        <div class="tabs-bar">
+          <button type="button" class="tab-btn active" data-tab="tab-markdown" onclick="switchTab('tab-markdown')">
+            Conteúdo Limpo (Markdown)
+          </button>
+          <button type="button" class="tab-btn" data-tab="tab-visual" onclick="switchTab('tab-visual')">
+            Visual &amp; HTML Original
+          </button>
+          <button type="button" class="tab-btn" data-tab="tab-tables" onclick="switchTab('tab-tables')">
+            Tabelas &amp; JSON Estruturado
+          </button>
+          <button type="button" class="tab-btn" data-tab="tab-links" onclick="switchTab('tab-links')">
+            Links Mapeados
+          </button>
+          <button type="button" class="tab-btn" data-tab="tab-media" onclick="switchTab('tab-media')">
+            Mídias &amp; Arquivos (<span id="tabMediaCount">0</span>)
+          </button>
+          <button type="button" class="tab-btn" data-tab="tab-history" onclick="switchTab('tab-history'); loadHistory();">
+            Histórico no Disco
+          </button>
+        </div>
+
+        <!-- TAB 1: CLEAN MARKDOWN & READER VIEW -->
+        <div id="tab-markdown" class="tab-content active">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span id="currentPageTitle" style="font-size: 0.84rem; font-weight: 600; color: var(--text-primary);">
+              Nenhum documento carregado
+            </span>
+            <div style="display: flex; gap: 0.38rem; align-items: center; flex-wrap: wrap;">
+              <input
+                type="text"
+                id="markdownSearchInput"
+                placeholder="Pesquisar no texto (/)"
+                oninput="filterMarkdownContent()"
+                style="width: 185px; padding: 0.3rem 0.6rem; font-size: 0.74rem;"
+              />
+              <button type="button" id="toggleReaderModeBtn" class="btn-chip" onclick="toggleMarkdownViewMode()">
+                Modo Leitura Formatada
+              </button>
+              <button type="button" class="btn-chip" onclick="copyPromptReadyForAI()">
+                Copiar Prompt IA
+              </button>
+              <button type="button" class="btn-chip" onclick="copyTextFromEl('markdownOutput')">
+                Copiar Markdown
+              </button>
+              <button type="button" class="btn-chip" onclick="downloadQuickBlob('markdownOutput', 'conteudo_limpo.md', 'text/markdown')">
+                Baixar .MD
+              </button>
+            </div>
+          </div>
+          <pre id="markdownOutput" class="code-viewer">Inicie uma varredura ao lado para visualizar o conteúdo extraído.</pre>
+          <div id="markdownReaderOutput" class="reader-viewer"></div>
+        </div>
+
+        <!-- TAB 2: VISUAL & ORIGINAL HTML -->
+        <div id="tab-visual" class="tab-content">
+          <div class="row-2col" style="margin-bottom: 0.85rem;">
+            <div style="background: var(--bg-canvas); padding: 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="font-size: 0.8rem;">Screenshot da Página Inteira</strong>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Clique na imagem para ampliar</span>
+              </div>
+              <div id="screenshotContainer" class="screenshot-frame" style="padding: 1.25rem; color: var(--text-muted); font-size: 0.78rem;">
+                Sem captura visual disponível. Utilize os motores Auto, Crawl4AI ou Playwright.
+              </div>
+            </div>
+
+            <div style="background: var(--bg-canvas); padding: 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="font-size: 0.8rem;">Código-Fonte HTML Original &amp; PDF</strong>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" id="downloadPdfQuickBtn" class="btn-chip" style="display: none;" onclick="downloadCurrentPdf()">
+                    Baixar PDF da Página
+                  </button>
+                  <button type="button" class="btn-chip" onclick="copyTextFromEl('rawHtmlOutput')">
+                    Copiar HTML
+                  </button>
+                </div>
+              </div>
+              <pre id="rawHtmlOutput" class="code-viewer" style="flex: 1; max-height: 500px;">&lt;!-- Código HTML bruto aparecerá aqui --&gt;</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: TABLES & STRUCTURED JSON -->
+        <div id="tab-tables" class="tab-content">
+          <div style="margin-bottom: 1rem;">
+            <div class="section-label"><span>Tabelas HTML Extraídas</span></div>
+            <div id="tablesRenderArea" style="max-height: 310px; overflow-y: auto; background: var(--bg-canvas); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              Nenhuma tabela extraída ainda.
+            </div>
+          </div>
+          <div>
+            <div class="section-label"><span>Metadados, Cabeçalhos (H1–H4) &amp; JSON-LD</span></div>
+            <pre id="structuredJsonOutput" class="code-viewer" style="max-height: 300px;">{}</pre>
+          </div>
+        </div>
+
+        <!-- TAB 4: LINKS -->
+        <div id="tab-links" class="tab-content">
+          <div style="display: flex; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <input type="text" id="linkFilterInput" placeholder="Filtrar links por texto âncora ou endereço..." oninput="filterLinksView()" />
+          </div>
+          <div id="linksRenderArea" style="max-height: 520px; overflow-y: auto;">
+            Inicie uma varredura para listar os links internos e externos.
+          </div>
+        </div>
+
+        <!-- TAB 5: MEDIA & ASSETS -->
+        <div id="tab-media" class="tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="font-size: 0.78rem; color: var(--text-secondary);">
+              Selecione os arquivos específicos que deseja baixar ao ativar "Download de Mídias e Documentos":
+            </span>
+            <div style="display: flex; gap: 0.4rem;">
+              <button type="button" class="btn-chip" onclick="toggleAllMediaChecks(true)">Marcar Todos</button>
+              <button type="button" class="btn-chip" onclick="toggleAllMediaChecks(false)">Desmarcar Todos</button>
+            </div>
+          </div>
+          <div id="mediaGridArea" class="media-grid">
+            Nenhuma mídia mapeada ainda.
+          </div>
+        </div>
+
+        <!-- TAB 6: SAVED HISTORY -->
+        <div id="tab-history" class="tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.78rem; color: var(--text-secondary);">
+              Registros armazenados no banco local (<code>omnicrawler.db</code>) e diretório <code>saved_crawls/</code>:
+            </span>
+            <button type="button" class="btn-chip" onclick="loadHistory()">Atualizar</button>
+          </div>
+          <div id="historyTableArea" style="overflow-x: auto;">
+            Carregando registros...
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DIALOG 0: INITIAL INTERACTIVE SPIDER CRAWLING STAGE ("Janela Inicial coletando um por um") -->
+  <dialog id="spiderStageDialog" closedby="any" aria-labelledby="spiderStageTitle">
+    <div class="dialog-header">
+      <div>
+        <h2 id="spiderStageTitle" style="font-size: 0.98rem; font-weight: 600;">
+          Varredura Física da Página — Coleta Item por Item
+        </h2>
+        <p id="spiderStageSubtitle" style="font-size: 0.75rem; color: var(--text-secondary);">
+          A aranha percorre os elementos da página em sequência e captura cada item individualmente.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.38rem; align-items: center; flex-wrap: wrap;">
+        <button type="button" id="stagePauseBtn" class="btn-chip" onclick="toggleSpiderPause()">
+          Pausar
+        </button>
+        <button type="button" class="btn-chip" onclick="stepSpiderNext()">
+          Próximo Item →
+        </button>
+        <button type="button" id="stageFollowMouseBtn" class="btn-chip" onclick="toggleStageFollowMouse()">
+          Guiar Cursor: OFF
+        </button>
+        <button type="button" class="btn-chip" onclick="skipStepByStepHarvest()">
+          Coletar Tudo Agora
+        </button>
+        <button type="button" class="btn" style="padding: 0.32rem 0.68rem; font-size: 0.75rem;" onclick="closeTopLayer(document.getElementById('spiderStageDialog'))">
+          Fechar (Esc)
+        </button>
+      </div>
+    </div>
+
+    <div class="spider-split-view">
+      <div class="spider-canvas-container" style="height: 390px;">
+        <canvas id="stageSpiderCanvas"></canvas>
+        <div class="canvas-footer-hint">
+          Clique em qualquer elemento na página para direcionar a aranha ou use o scroll para navegar
+        </div>
+      </div>
+
+      <div class="harvest-feed-box" style="height: 390px;">
+        <div class="harvest-feed-header">
+          <span>Itens Capturados em Sequência</span>
+          <span id="stageHarvestCounter" class="tag-pill">0 / 0</span>
+        </div>
+        <div class="harvest-feed-list" id="stageHarvestFeedList">
+          <div style="color: var(--text-muted); font-size: 0.75rem; padding: 0.75rem;">
+            Conectando ao servidor alvo e mapeando árvore DOM...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-progress-track">
+      <div class="stage-progress-fill" id="stageProgressBar"></div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;">
+      <span id="stageStatusText" style="font-size: 0.78rem; color: var(--text-secondary);">
+        Inicializando motor de extração...
+      </span>
+      <button type="button" id="stageDeliverBtn" class="btn btn-primary" style="width: auto; padding: 0.45rem 1rem;" onclick="finishAndCloseStageModal()">
+        Inspecionar Dados Extraídos
+      </button>
+    </div>
+  </dialog>
+
+  <!-- DIALOG 1: ENGINE COMPARISON & DISK SPACE -->
+  <dialog id="enginesDialog" closedby="any" aria-labelledby="enginesDialogTitle">
+    <div class="dialog-header">
+      <h2 id="enginesDialogTitle" style="font-size: 0.96rem; font-weight: 600;">
+        Motores Instalados &amp; Uso de Espaço em Disco
+      </h2>
+      <button type="button" class="btn-chip" onclick="closeTopLayer(document.getElementById('enginesDialog'))">Fechar (Esc)</button>
+    </div>
+    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.85rem;">
+      Todos os motores abaixo são open-source, gratuitos e compartilham o mesmo binário Chromium local:
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Motor</th>
+          <th>Espaço em Disco</th>
+          <th>Tempo Médio</th>
+          <th>Suporte JS / Visual</th>
+          <th>Aplicação Principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Crawl4AI</strong></td>
+          <td>~45 MB (compartilha Chromium)</td>
+          <td>2–5s / pág</td>
+          <td>Sim (PNG + PDF)</td>
+          <td>Geração de Markdown limpo e estruturado para leitura e LLMs</td>
+        </tr>
+        <tr>
+          <td><strong>Playwright Stealth</strong></td>
+          <td>~37 MB + ~195 MB Chromium</td>
+          <td>2–5s / pág</td>
+          <td>Sim (Full-Page PNG + PDF)</td>
+          <td>Aplicações SPA/React pesadas, lazy-loading e captura visual fiel</td>
+        </tr>
+        <tr>
+          <td><strong>Trafilatura + HTTPX</strong></td>
+          <td>~18 MB (sem navegador)</td>
+          <td>0.3–1s / pág</td>
+          <td>Apenas HTML estático</td>
+          <td>Extração ultrarrápida de artigos, notícias e documentações</td>
+        </tr>
+        <tr>
+          <td><strong>Scrapy / Parsel</strong></td>
+          <td>~28 MB</td>
+          <td>0.4–1.2s / pág</td>
+          <td>Apenas HTML estático</td>
+          <td>Consultas com seletores CSS/XPath customizados, tabelas e subpáginas</td>
+        </tr>
+      </tbody>
+    </table>
+  </dialog>
+
+  <!-- DIALOG 2: FULLSCREEN SCREENSHOT PREVIEW -->
+  <dialog id="screenshotModal" closedby="any" aria-labelledby="screenshotModalTitle" style="max-width: 94vw;">
+    <div class="dialog-header">
+      <h2 id="screenshotModalTitle" style="font-size: 0.95rem;">Visualização em Alta Resolução</h2>
+      <button type="button" class="btn-chip" onclick="closeTopLayer(document.getElementById('screenshotModal'))">Fechar (Esc)</button>
+    </div>
+    <div style="max-height: 82vh; overflow-y: auto; text-align: center;">
+      <img id="modalScreenshotImg" src="" alt="Screenshot da Página" style="max-width: 100%; height: auto;" />
+    </div>
+  </dialog>
+
+  <!-- DIALOG 3: CAPTURED ITEM INSPECTOR -->
+  <dialog id="itemInspectorDialog" closedby="any" aria-labelledby="itemInspectorTitle" style="max-width: 640px;">
+    <div class="dialog-header">
+      <h2 id="itemInspectorTitle" style="font-size: 0.94rem; font-weight: 600;">Detalhes do Item Capturado</h2>
+      <button type="button" class="btn-chip" onclick="closeTopLayer(document.getElementById('itemInspectorDialog'))">Fechar (Esc)</button>
+    </div>
+    <div id="itemInspectorBody" style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.82rem;"></div>
+  </dialog>
+
+  <script src="/static/spider_sim.js"></script>
+  <script>
+    // =========================================================================
+    // 1. Modern Web Guidance: Top-Layer Exit Animation, closedby & :user-invalid
+    // =========================================================================
+    let supportsDisplayTransition;
+    function canTransitionDisplay() {
+      if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+      if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+        return false;
+      }
+      const probe = document.createElement('div');
+      probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+      document.body.appendChild(probe);
+      getComputedStyle(probe).display;
+      probe.style.display = 'none';
+      supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+      probe.remove();
+      return supportsDisplayTransition;
+    }
+
+    function supportsTopLayerExit() {
+      return window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay();
+    }
+
+    async function closeTopLayer(element) {
+      if (!element || !element.open) return;
+      if (!supportsTopLayerExit()) {
+        element.setAttribute('data-closing', '');
+        const animations = element.getAnimations({ subtree: true });
+        if (animations.length > 0) {
+          await Promise.race([
+            Promise.allSettled(animations.map((a) => a.finished)),
+            new Promise((r) => setTimeout(r, 2000)),
+          ]);
+        }
+        if (!element.hasAttribute('data-closing')) return;
+        element.removeAttribute('data-closing');
+      }
+      element.close();
+    }
+
+    document.querySelectorAll('dialog').forEach((dialog) => {
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        closeTopLayer(dialog);
+      });
+
+      if (!('closedBy' in HTMLDialogElement.prototype)) {
+        dialog.addEventListener('click', (event) => {
+          if (event.target !== dialog) return;
+          const rect = dialog.getBoundingClientRect();
+          const isDialogContent = (
+            rect.top <= event.clientY &&
+            event.clientY <= rect.top + rect.height &&
+            rect.left <= event.clientX &&
+            event.clientX <= rect.left + rect.width
+          );
+          if (isDialogContent) return;
+          closeTopLayer(dialog);
+        });
+      }
+    });
+
+    const UserInvalidFallback = (() => {
+      const dirtyState = new WeakMap();
+      const updateState = (input) => {
+        const isValid = input.checkValidity();
+        input.classList.toggle('user-invalid-fallback', !isValid);
+        input.classList.toggle('user-valid-fallback', isValid);
+        if (!isValid) {
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          input.removeAttribute('aria-invalid');
+        }
+      };
+      const handleEvent = (event) => {
+        const input = event.target;
+        if (!input || !input.checkValidity) return;
+        if (event.type === 'input' || event.type === 'change') {
+          const state = dirtyState.get(input) || { hasInteracted: false, hasBlurred: false };
+          state.hasInteracted = true;
+          dirtyState.set(input, state);
+          if (state.hasBlurred) updateState(input);
+        } else if (event.type === 'blur') {
+          const state = dirtyState.get(input) || { hasInteracted: false, hasBlurred: false };
+          state.hasBlurred = true;
+          dirtyState.set(input, state);
+          if (state.hasInteracted) updateState(input);
+        }
+      };
+      const init = (root = document) => {
+        if (CSS.supports('selector(:user-invalid)')) return;
+        root.addEventListener('blur', handleEvent, true);
+        root.addEventListener('input', handleEvent);
+        root.addEventListener('change', handleEvent);
+      };
+      return { init };
+    })();
+
+    UserInvalidFallback.init(document.getElementById('crawlForm'));
+
+    const syncAria = (el) => {
+      if (el && el.matches) {
+        try {
+          el.setAttribute('aria-invalid', el.matches(':user-invalid') ? 'true' : 'false');
+        } catch (_) {}
+      }
+    };
+    document.addEventListener('blur', (e) => syncAria(e.target), true);
+    document.addEventListener('input', (e) => {
+      if (e.target && e.target.hasAttribute && e.target.hasAttribute('aria-invalid')) syncAria(e.target);
+    });
+
+    // =========================================================================
+    // 2. Initialize Hz-Synced Physical Spiders & Item-by-Item Feed
+    // =========================================================================
+    let sideSpider = null;
+    let stageSpider = null;
+    let fullMarkdownCache = '';
+    let readerModeActive = false;
+    let capturedNodesMap = {};
+
+    function appendHarvestedItemToUI(node, count, total) {
+      capturedNodesMap[node.id] = node;
+      const pct = Math.round((count / Math.max(1, total)) * 100);
+      document.getElementById('liveHarvestCounter').textContent = `${count} / ${total}`;
+      document.getElementById('stageHarvestCounter').textContent = `${count} / ${total}`;
+      document.getElementById('stageProgressBar').style.width = `${pct}%`;
+      document.getElementById('stageStatusText').textContent = `Capturado [${count}/${total}]: ${node.tag} — ${node.title}`;
+
+      const cardHtml = `
+        <div class="harvest-item-card" onclick="inspectHarvestedNode(${node.id})">
+          <div class="harvest-item-top">
+            <span class="harvest-tag">#${node.id} ${escapeHtml(node.tag)}</span>
+            <span style="font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase;">${escapeHtml(node.category)}</span>
+          </div>
+          <div style="color: var(--text-primary); font-weight: 500;">${escapeHtml(node.title)}</div>
+          <div style="color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${escapeHtml(node.snippet)}
+          </div>
+        </div>
+      `;
+
+      ['sideHarvestFeedList', 'stageHarvestFeedList'].forEach((listId) => {
+        const listEl = document.getElementById(listId);
+        if (!listEl) return;
+        if (count === 1) listEl.innerHTML = '';
+        listEl.insertAdjacentHTML('afterbegin', cardHtml);
+      });
+    }
+
+    function inspectHarvestedNode(nodeId) {
+      const node = capturedNodesMap[nodeId];
+      if (!node) return;
+      focusResultTabForCategory(node.category);
+
+      const body = document.getElementById('itemInspectorBody');
+      body.innerHTML = `
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <span class="tag-pill">#${node.id} ${escapeHtml(node.tag)}</span>
+          <span class="tag-pill">${escapeHtml(node.category.toUpperCase())}</span>
+        </div>
+        <div>
+          <strong style="color:var(--text-secondary);font-size:0.74rem;display:block;">Título / Identificador:</strong>
+          <div style="font-weight:600;color:var(--text-primary);margin-top:0.15rem;">${escapeHtml(node.title)}</div>
+        </div>
+        <div>
+          <strong style="color:var(--text-secondary);font-size:0.74rem;display:block;">Conteúdo / Trecho Capturado:</strong>
+          <pre class="code-viewer" style="max-height:220px;margin-top:0.25rem;" id="inspectorSnippetText">${escapeHtml(node.snippet)}</pre>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.45rem;">
+          <button type="button" class="btn-chip" onclick="copyTextFromEl('inspectorSnippetText')">Copiar Trecho</button>
+        </div>
+      `;
+      document.getElementById('itemInspectorDialog').showModal();
+    }
+
+    function onAllItemsHarvestedCallback() {
+      document.getElementById('stageProgressBar').style.width = '100%';
+      document.getElementById('stageStatusText').textContent = 'Todos os itens da página foram capturados pela aranha.';
+    }
+
+    function focusResultTabForCategory(cat) {
+      if (cat === 'table' || cat === 'meta') switchTab('tab-tables');
+      else if (cat === 'media') switchTab('tab-media');
+      else if (cat === 'link') switchTab('tab-links');
+      else switchTab('tab-markdown');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const sideCanvas = document.getElementById('sideSpiderCanvas');
+      sideSpider = new PhysicalSpiderEngine(sideCanvas, {
+        mode: 'side',
+        baseWalkSpeed: 132,
+        scale: 0.96,
+        onItemHarvested: (node, count, total) => {
+          if (!document.getElementById('spiderStageDialog').open) {
+            appendHarvestedItemToUI(node, count, total);
+          }
+        },
+        onAllHarvested: () => {
+          if (!document.getElementById('spiderStageDialog').open) {
+            onAllItemsHarvestedCallback();
+          }
+        },
+      });
+
+      const stageCanvas = document.getElementById('stageSpiderCanvas');
+      stageSpider = new PhysicalSpiderEngine(stageCanvas, {
+        mode: 'stage',
+        baseWalkSpeed: 140,
+        scale: 1.08,
+        onItemHarvested: (node, count, total) => {
+          if (document.getElementById('spiderStageDialog').open) {
+            appendHarvestedItemToUI(node, count, total);
+            if (sideSpider && sideSpider.harvestNodes[count - 1]) {
+              sideSpider.harvestNodes[count - 1].collected = true;
+              sideSpider.harvestNodes[count - 1].webWrapProgress = 1.0;
+              sideSpider.harvestedCount = count;
+              sideSpider.currentNodeIndex = Math.min(count, sideSpider.harvestNodes.length - 1);
+            }
+          }
+        },
+        onAllHarvested: () => {
+          onAllItemsHarvestedCallback();
+        },
+      });
+
+      window.addEventListener('resize', () => {
+        sideSpider?.resize();
+        if (document.getElementById('spiderStageDialog').open) {
+          stageSpider?.resize();
+        }
+      });
+
+      // Global Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('crawlForm').requestSubmit();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+          if (currentJob) {
+            e.preventDefault();
+            saveCurrentJobSelection();
+          }
+        } else if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          document.getElementById('markdownSearchInput')?.focus();
+        }
+      });
+
+      updateSaveSummaryHint();
+    });
+
+    function toggleSpiderPause() {
+      const p1 = sideSpider ? sideSpider.togglePause() : false;
+      if (stageSpider) stageSpider.paused = p1;
+      document.getElementById('sidePauseBtn').textContent = p1 ? 'Continuar ▶' : 'Pausar';
+      document.getElementById('stagePauseBtn').textContent = p1 ? 'Continuar ▶' : 'Pausar';
+      document.getElementById('sidePauseBtn').classList.toggle('active', p1);
+      document.getElementById('stagePauseBtn').classList.toggle('active', p1);
+    }
+
+    function stepSpiderNext() {
+      if (document.getElementById('spiderStageDialog').open) {
+        stageSpider?.stepToNextItem();
+      } else {
+        sideSpider?.stepToNextItem();
+      }
+    }
+
+    function changeSpiderSpeed(val) {
+      sideSpider?.setSpeedMultiplier(val);
+      stageSpider?.setSpeedMultiplier(val);
+    }
+
+    function skipStepByStepHarvest() {
+      if (document.getElementById('spiderStageDialog').open) {
+        stageSpider?.completeAllImmediately();
+      } else {
+        sideSpider?.completeAllImmediately();
+      }
+    }
+
+    function finishAndCloseStageModal() {
+      stageSpider?.completeAllImmediately();
+      closeTopLayer(document.getElementById('spiderStageDialog'));
+    }
+
+    function onEngineRadioChange() {
+      const selectedEngine = document.querySelector('input[name="engine"]:checked')?.value || 'auto';
+      sideSpider?.setEngineTheme(selectedEngine);
+      stageSpider?.setEngineTheme(selectedEngine);
+    }
+
+    function toggleSideSpiderVisibility() {
+      const show = document.getElementById('keepSideSpiderToggle').checked;
+      document.getElementById('sideSpiderDock').style.display = show ? 'block' : 'none';
+      if (sideSpider) {
+        sideSpider.running = show;
+        if (show) sideSpider.resize();
+      }
+    }
+
+    function toggleSideFollowMouse() {
+      if (!sideSpider) return;
+      sideSpider.followMouse = !sideSpider.followMouse;
+      const btn = document.getElementById('sideFollowMouseBtn');
+      btn.textContent = `Guiar Cursor: ${sideSpider.followMouse ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', sideSpider.followMouse);
+    }
+
+    function toggleStageFollowMouse() {
+      if (!stageSpider) return;
+      stageSpider.followMouse = !stageSpider.followMouse;
+      const btn = document.getElementById('stageFollowMouseBtn');
+      btn.textContent = `Guiar Cursor: ${stageSpider.followMouse ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', stageSpider.followMouse);
+    }
+
+    function openSpiderStageModalManual() {
+      const dlg = document.getElementById('spiderStageDialog');
+      dlg.showModal();
+      setTimeout(() => {
+        stageSpider?.resize();
+      }, 25);
+    }
+
+    // =========================================================================
+    // 3. Application State & Toast Notifications
+    // =========================================================================
+    let currentJob = null;
+    let lastSavedRecordId = null;
+
+    function showBanner(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-item';
+      if (type === 'error') {
+        toast.style.borderLeftColor = '#ef4444';
+      } else if (type === 'success') {
+        toast.style.borderLeftColor = '#10b981';
+      }
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+      }, 4200);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.tab-content').forEach((pane) => {
+        pane.classList.toggle('active', pane.id === tabId);
+      });
+    }
+
+    function toggleDeepCrawlOptions() {
+      const on = document.getElementById('followLinksToggle').checked;
+      document.getElementById('deepCrawlBox').style.display = on ? 'block' : 'none';
+    }
+
+    function applySavePreset(preset) {
+      const cClean = document.getElementById('optSaveClean');
+      const cHtml = document.getElementById('optSaveOriginalHtml');
+      const cVisual = document.getElementById('optSaveVisual');
+      const cTables = document.getElementById('optSaveTablesLinks');
+      const cMedia = document.getElementById('optSaveMedia');
+
+      if (preset === 'clean_only') {
+        cClean.checked = true;
+        cHtml.checked = false;
+        cVisual.checked = false;
+        cTables.checked = false;
+        cMedia.checked = false;
+      } else if (preset === 'clean_and_visual') {
+        cClean.checked = true;
+        cHtml.checked = true;
+        cVisual.checked = true;
+        cTables.checked = false;
+        cMedia.checked = false;
+      } else if (preset === 'all') {
+        cClean.checked = true;
+        cHtml.checked = true;
+        cVisual.checked = true;
+        cTables.checked = true;
+        cMedia.checked = true;
+      }
+      updateSaveSummaryHint();
+    }
+
+    function getSaveOptionsFromUI() {
+      const checkedMedia = Array.from(document.querySelectorAll('.media-item-checkbox:checked')).map(
+        (cb) => cb.value
+      );
+      return {
+        save_clean_content: document.getElementById('optSaveClean').checked,
+        save_original_html: document.getElementById('optSaveOriginalHtml').checked,
+        save_visual_capture: document.getElementById('optSaveVisual').checked,
+        save_tables_links: document.getElementById('optSaveTablesLinks').checked,
+        save_media_files: document.getElementById('optSaveMedia').checked,
+        selected_media_urls: checkedMedia.length > 0 ? checkedMedia : null,
+        max_media_files: parseInt(document.getElementById('maxMediaInput').value || '35', 10),
+      };
+    }
+
+    function updateSaveSummaryHint() {
+      const opts = getSaveOptionsFromUI();
+      const parts = [];
+      const expectedFiles = [];
+
+      if (opts.save_clean_content) {
+        parts.push('Conteúdo Limpo');
+        expectedFiles.push('conteudo_limpo.md', 'texto_puro.txt', 'dados_estruturados.json');
+      }
+      if (opts.save_original_html) {
+        parts.push('HTML Original');
+        expectedFiles.push('pagina_original.html');
+      }
+      if (opts.save_visual_capture) {
+        parts.push('Visual');
+        expectedFiles.push('screenshot.png', 'pagina_visual.pdf');
+      }
+      if (opts.save_tables_links) {
+        parts.push('Tabelas & Links');
+        expectedFiles.push('links_extraidos.csv', 'tabelas/*.csv');
+      }
+      if (opts.save_media_files) {
+        parts.push('Mídias');
+        expectedFiles.push('midias_arquivos/*');
+      }
+
+      const summaryEl = document.getElementById('saveSelectionSummaryText');
+      if (summaryEl) {
+        summaryEl.textContent = parts.length === 0
+          ? 'Nenhuma opção marcada. Selecione ao menos uma categoria na coluna esquerda.'
+          : 'Categorias selecionadas: ' + parts.join(' + ');
+      }
+
+      const previewStrip = document.getElementById('expectedFilesPreview');
+      if (previewStrip) {
+        if (expectedFiles.length === 0) {
+          previewStrip.innerHTML = '<span>Nenhuma saída selecionada para gravação.</span>';
+        } else {
+          previewStrip.innerHTML = '<span>Saída no disco:</span>' + expectedFiles.map(f => `<span class="file-badge">${f}</span>`).join('');
+        }
+      }
+    }
+
+    document.querySelectorAll('#optSaveClean, #optSaveOriginalHtml, #optSaveVisual, #optSaveTablesLinks, #optSaveMedia').forEach((el) => {
+      el?.addEventListener('change', updateSaveSummaryHint);
+    });
+
+    // =========================================================================
+    // 4. Execute Crawl Request & Launch Item-by-Item Spider Harvest
+    // =========================================================================
+    document.getElementById('crawlForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const btn = document.getElementById('runCrawlBtn');
+      btn.disabled = true;
+      btn.textContent = 'Executando Varredura...';
+
+      const targetUrlVal = document.getElementById('targetUrl').value.trim();
+      const selectedEngine = document.querySelector('input[name="engine"]:checked')?.value || 'auto';
+      const followLinks = document.getElementById('followLinksToggle').checked;
+      const autoSave = document.getElementById('autoSaveToggle').checked;
+      const showStageModal = document.getElementById('showInitialSpiderModalToggle').checked;
+
+      capturedNodesMap = {};
+      document.getElementById('sideHarvestFeedList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 0.75rem;">Conectando à página e preparando fila de itens...</div>';
+      document.getElementById('stageHarvestFeedList').innerHTML = '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 0.75rem;">Conectando à página e preparando fila de itens...</div>';
+      document.getElementById('liveHarvestCounter').textContent = '0 / 0';
+      document.getElementById('stageHarvestCounter').textContent = '0 / 0';
+
+      sideSpider?.startConnectingPhase(targetUrlVal, selectedEngine);
+      stageSpider?.startConnectingPhase(targetUrlVal, selectedEngine);
+
+      const stageDlg = document.getElementById('spiderStageDialog');
+      const progressBar = document.getElementById('stageProgressBar');
+      const stageStatus = document.getElementById('stageStatusText');
+
+      if (showStageModal) {
+        progressBar.style.width = '8%';
+        stageStatus.textContent = `Conectando a ${targetUrlVal} via [${selectedEngine.toUpperCase()}]...`;
+        stageDlg.showModal();
+        setTimeout(() => {
+          stageSpider?.resize();
+        }, 25);
+      }
+
+      showBanner(`Iniciando extração em ${targetUrlVal} [${selectedEngine.toUpperCase()}]`, 'info');
+
+      const payload = {
+        url: targetUrlVal,
+        engine: selectedEngine,
+        follow_links: followLinks,
+        max_pages: parseInt(document.getElementById('maxPagesInput').value || '1', 10),
+        max_depth: parseInt(document.getElementById('maxDepthInput').value || '1', 10),
+        same_domain_only: document.getElementById('sameDomainOnly').checked,
+        url_pattern: document.getElementById('urlPatternInput').value.trim() || null,
+        wait_ms: parseInt(document.getElementById('waitMsInput').value || '1200', 10),
+        scroll_page: document.getElementById('scrollPageToggle').checked,
+        capture_visuals: document.getElementById('captureVisualsToggle').checked,
+        custom_css_selector: document.getElementById('customCssInput').value.trim() || null,
+        custom_xpath: document.getElementById('customXpathInput').value.trim() || null,
+        auto_save: autoSave,
+        save_options: getSaveOptionsFromUI(),
+      };
+
+      try {
+        const res = await fetch('/api/crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Erro ao processar requisição.');
+        }
+
+        currentJob = data.job;
+        renderJobResults(currentJob);
+
+        sideSpider?.startRealHarvestSequence(currentJob);
+        stageSpider?.startRealHarvestSequence(currentJob);
+
+        if (data.auto_saved && data.auto_saved.record_id) {
+          lastSavedRecordId = data.auto_saved.record_id;
+          showSaveConfirmation(data.auto_saved);
+          loadHistory();
+        } else {
+          showBanner(
+            `Extração concluída em ${currentJob.total_elapsed_seconds}s (${currentJob.pages_crawled} pág.). Aranha coletando elementos.`,
+            'success'
+          );
+        }
+      } catch (err) {
+        if (stageDlg.open) closeTopLayer(stageDlg);
+        showBanner(`Erro na requisição: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar Varredura';
+      }
+    });
+
+    // =========================================================================
+    // 5. Render Results in Tabs & Reader View
+    // =========================================================================
+    function renderJobResults(job) {
+      const words = job.summary?.total_words || 0;
+      const estTokens = Math.round((job.summary?.total_chars || 0) / 4);
+      document.getElementById('statEngine').textContent = (job.engine_used || 'auto').toUpperCase();
+      document.getElementById('statPagesTime').textContent = `${job.pages_crawled} pág • ${job.total_elapsed_seconds}s`;
+      document.getElementById('statWords').textContent = `${words.toLocaleString('pt-BR')} / ~${estTokens.toLocaleString('pt-BR')}`;
+      document.getElementById('statTables').textContent = job.summary?.total_tables || 0;
+      document.getElementById('statLinks').textContent = `${job.summary?.total_internal_links || 0} / ${job.summary?.total_external_links || 0}`;
+      document.getElementById('statMedia').textContent = job.summary?.total_media_assets || 0;
+      document.getElementById('tabMediaCount').textContent = job.summary?.total_media_assets || 0;
+
+      document.getElementById('saveToolbar').style.display = 'flex';
+      updateSaveSummaryHint();
+
+      const switcherBar = document.getElementById('pageSwitcherBar');
+      const selectEl = document.getElementById('crawledPageSelect');
+      selectEl.innerHTML = '';
+      if (job.pages && job.pages.length > 1) {
+        switcherBar.style.display = 'flex';
+        const allOpt = document.createElement('option');
+        allOpt.value = '-1';
+        allOpt.textContent = `Todas as ${job.pages.length} páginas combinadas (Markdown Unificado)`;
+        selectEl.appendChild(allOpt);
+        job.pages.forEach((p, idx) => {
+          const opt = document.createElement('option');
+          opt.value = String(idx);
+          opt.textContent = `[Pág ${idx + 1}] ${p.title || p.url} (${p.url})`;
+          selectEl.appendChild(opt);
+        });
+        selectEl.value = '0';
+      } else {
+        switcherBar.style.display = 'none';
+      }
+
+      renderSelectedPage();
+    }
+
+    function renderMarkdownToHtmlSimple(md) {
+      const safe = escapeHtml(md || '');
+      const lines = safe.split('\n');
+      return lines.map((line) => {
+        if (line.startsWith('### ')) return `<h3>${line.slice(4)}</h3>`;
+        if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
+        if (line.startsWith('# ')) return `<h1>${line.slice(2)}</h1>`;
+        if (line.trim() === '') return '';
+        const formatted = line
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/`(.+?)`/g, '<code>$1</code>')
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        return `<p>${formatted}</p>`;
+      }).join('\n');
+    }
+
+    function toggleMarkdownViewMode() {
+      readerModeActive = !readerModeActive;
+      const codeEl = document.getElementById('markdownOutput');
+      const readerEl = document.getElementById('markdownReaderOutput');
+      const btn = document.getElementById('toggleReaderModeBtn');
+      if (readerModeActive) {
+        codeEl.style.display = 'none';
+        readerEl.style.display = 'block';
+        readerEl.innerHTML = renderMarkdownToHtmlSimple(fullMarkdownCache);
+        btn.classList.add('active');
+        btn.textContent = 'Ver Código Markdown';
+      } else {
+        codeEl.style.display = 'block';
+        readerEl.style.display = 'none';
+        btn.classList.remove('active');
+        btn.textContent = 'Modo Leitura Formatada';
+      }
+    }
+
+    function renderSelectedPage() {
+      if (!currentJob || !currentJob.pages || currentJob.pages.length === 0) return;
+      const selVal = parseInt(document.getElementById('crawledPageSelect')?.value || '0', 10);
+      const isCombined = selVal === -1;
+      const page = isCombined ? currentJob.pages[0] : (currentJob.pages[selVal] || currentJob.pages[0]);
+
+      document.getElementById('currentPageTitle').textContent = isCombined
+        ? `Conteúdo Combinado (${currentJob.pages.length} páginas)`
+        : `${page.title || page.url}`;
+      fullMarkdownCache = isCombined
+        ? (currentJob.combined_markdown || '')
+        : (page.markdown || 'Sem conteúdo Markdown extraído.');
+      document.getElementById('markdownOutput').textContent = fullMarkdownCache;
+      if (readerModeActive) {
+        document.getElementById('markdownReaderOutput').innerHTML = renderMarkdownToHtmlSimple(fullMarkdownCache);
+      }
+
+      document.getElementById('rawHtmlOutput').textContent = page.raw_html || '<!-- HTML vazio -->';
+      const scrContainer = document.getElementById('screenshotContainer');
+      if (page.screenshot_b64) {
+        const dataUri = `data:image/png;base64,${page.screenshot_b64}`;
+        scrContainer.innerHTML = `<img src="${dataUri}" alt="Screenshot de ${page.url}" onclick="openFullScreenshot('${dataUri}')" />`;
+      } else {
+        scrContainer.innerHTML = `<div style="padding: 1.5rem; color: var(--text-muted);">Página extraída sem captura de imagem. Para gerar Screenshot PNG e PDF, utilize os motores Auto, Crawl4AI ou Playwright.</div>`;
+      }
+
+      const pdfBtn = document.getElementById('downloadPdfQuickBtn');
+      pdfBtn.style.display = page.pdf_b64 ? 'inline-flex' : 'none';
+
+      const tables = isCombined ? (currentJob.aggregated?.tables || []) : (page.tables || []);
+      const tablesArea = document.getElementById('tablesRenderArea');
+      if (tables.length === 0) {
+        tablesArea.innerHTML = '<span style="color: var(--text-muted); font-size: 0.78rem;">Nenhuma tabela <code>&lt;table&gt;</code> encontrada nesta página.</span>';
+      } else {
+        tablesArea.innerHTML = tables.map((t, i) => {
+          const headersHtml = (t.headers && t.headers.length)
+            ? `<thead><tr>${t.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>`
+            : '';
+          const rowsHtml = (t.rows || []).slice(0, 15).map(
+            r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`
+          ).join('');
+          return `
+            <div style="margin-bottom: 1rem;">
+              <strong style="font-size: 0.78rem; color: var(--text-secondary);">Tabela #${i + 1} (${t.row_count} linhas)</strong>
+              <table class="data-table" style="margin-top: 0.3rem;">${headersHtml}<tbody>${rowsHtml}</tbody></table>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const structInfo = {
+        url: page.url,
+        status_code: page.status_code,
+        engine_used: page.engine_used,
+        elapsed_seconds: page.elapsed_seconds,
+        title: page.title,
+        description: page.description,
+        headings: page.headings,
+        meta_tags: page.meta_tags,
+        custom_matches: page.custom_matches,
+        json_ld: page.json_ld,
+      };
+      document.getElementById('structuredJsonOutput').textContent = JSON.stringify(structInfo, null, 2);
+
+      renderLinksTable(page);
+
+      const mediaList = isCombined ? (currentJob.aggregated?.media_assets || []) : (page.media_assets || []);
+      const mediaGrid = document.getElementById('mediaGridArea');
+      if (mediaList.length === 0) {
+        mediaGrid.innerHTML = '<span style="color: var(--text-muted); font-size: 0.78rem;">Nenhuma imagem ou documento encontrado.</span>';
+      } else {
+        mediaGrid.innerHTML = mediaList.map((m) => {
+          const isImg = m.type === 'image';
+          const previewHtml = isImg
+            ? `<img class="media-thumb" src="${escapeHtml(m.url)}" loading="lazy" alt="${escapeHtml(m.label)}" onerror="this.style.display='none'" />`
+            : `<div class="media-thumb" style="display:grid;place-items:center;font-size:1.1rem;color:var(--text-muted);font-family:var(--font-mono);">DOC</div>`;
+          return `
+            <label class="media-card">
+              ${previewHtml}
+              <div style="display:flex;align-items:flex-start;gap:0.4rem;">
+                <input type="checkbox" class="media-item-checkbox" value="${escapeHtml(m.url)}" checked />
+                <div style="overflow:hidden;text-overflow:ellipsis;">
+                  <strong style="color:var(--text-secondary);text-transform:uppercase;font-size:0.65rem;">${escapeHtml(m.type)}</strong>
+                  <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(m.label)}">${escapeHtml(m.label)}</div>
+                </div>
+              </div>
+              <a href="${escapeHtml(m.url)}" target="_blank" style="color:var(--text-muted);font-size:0.68rem;text-decoration:underline;">Abrir original</a>
+            </label>
+          `;
+        }).join('');
+      }
+    }
+
+    function filterMarkdownContent() {
+      const q = (document.getElementById('markdownSearchInput')?.value || '').trim().toLowerCase();
+      const out = document.getElementById('markdownOutput');
+      if (!q) {
+        out.textContent = fullMarkdownCache;
+        return;
+      }
+      const lines = fullMarkdownCache.split('\n');
+      const matched = lines.filter((line) => line.toLowerCase().includes(q));
+      out.textContent = matched.length > 0
+        ? `// ${matched.length} linha(s) contendo "${q}":\n\n` + matched.join('\n\n')
+        : `Nenhuma ocorrência encontrada para "${q}".`;
+    }
+
+    function copyPromptReadyForAI() {
+      if (!currentJob) return;
+      const promptBlock = [
+        `# Contexto Extraído da Web`,
+        `- **URL Fonte:** ${currentJob.start_url}`,
+        `- **Título:** ${currentJob.title}`,
+        `- **Data da Coleta:** ${currentJob.created_at}`,
+        ``,
+        `## Conteúdo Principal (Markdown)`,
+        fullMarkdownCache || '',
+      ].join('\n');
+      navigator.clipboard.writeText(promptBlock);
+      showBanner('Contexto formatado para IA copiado para a área de transferência.', 'success');
+    }
+
+    function renderLinksTable(page) {
+      const filterText = (document.getElementById('linkFilterInput')?.value || '').toLowerCase();
+      const internal = (page.internal_links || []).map(l => ({ ...l, scope: 'Interno' }));
+      const external = (page.external_links || []).map(l => ({ ...l, scope: 'Externo' }));
+      const combined = [...internal, ...external].filter(
+        l => !filterText || l.url.toLowerCase().includes(filterText) || (l.text || '').toLowerCase().includes(filterText)
+      );
+
+      const area = document.getElementById('linksRenderArea');
+      if (combined.length === 0) {
+        area.innerHTML = '<span style="color: var(--text-muted); font-size: 0.78rem;">Nenhum link corresponde ao filtro.</span>';
+        return;
+      }
+
+      area.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Escopo</th>
+              <th>Texto Âncora</th>
+              <th>Endereço URL</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${combined.slice(0, 250).map(l => `
+              <tr>
+                <td><span class="tag-pill">${l.scope}</span></td>
+                <td>${escapeHtml(l.text || '—')}</td>
+                <td style="word-break:break-all;"><a href="${escapeHtml(l.url)}" target="_blank" style="color:var(--text-primary);">${escapeHtml(l.url)}</a></td>
+                <td>
+                  <button type="button" class="btn-chip" onclick="crawlThisUrl('${escapeHtml(l.url)}')">
+                    Carregar no Alvo
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function filterLinksView() {
+      if (!currentJob || !currentJob.pages?.length) return;
+      const selVal = Math.max(0, parseInt(document.getElementById('crawledPageSelect')?.value || '0', 10));
+      renderLinksTable(currentJob.pages[selVal] || currentJob.pages[0]);
+    }
+
+    function crawlThisUrl(url) {
+      const input = document.getElementById('targetUrl');
+      input.value = url;
+      input.focus();
+      showBanner(`URL alvo atualizada para: ${url}`, 'info');
+    }
+
+    // =========================================================================
+    // 6. Selective On-Demand Saving & History
+    // =========================================================================
+    async function saveCurrentJobSelection() {
+      if (!currentJob) return;
+      const saveOpts = getSaveOptionsFromUI();
+      const btn = document.getElementById('saveSelectedBtn');
+      btn.disabled = true;
+      btn.textContent = 'Gravando arquivos...';
+
+      try {
+        const res = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job_id: currentJob.job_id,
+            save_options: saveOpts,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Erro ao salvar arquivos.');
+        }
+
+        lastSavedRecordId = data.record_id;
+        showSaveConfirmation(data);
+        loadHistory();
+      } catch (err) {
+        showBanner(`Não foi possível salvar: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Selecionados no Disco';
+      }
+    }
+
+    function showSaveConfirmation(savedInfo) {
+      const kb = (savedInfo.total_size_bytes / 1024).toFixed(1);
+      showBanner(
+        `Salvo com sucesso: ${savedInfo.files_count} arquivo(s) (${kb} KB) em ${savedInfo.folder_name}`,
+        'success'
+      );
+      const openBtn = document.getElementById('openLastSavedFolderBtn');
+      const zipBtn = document.getElementById('downloadLastZipBtn');
+      if (savedInfo.record_id) {
+        openBtn.style.display = 'inline-flex';
+        zipBtn.style.display = 'inline-flex';
+        zipBtn.href = `/api/history/${savedInfo.record_id}/zip`;
+      }
+    }
+
+    async function openLastSavedFolder() {
+      if (!lastSavedRecordId) return;
+      await fetch(`/api/history/${lastSavedRecordId}/open-folder`, { method: 'POST' });
+    }
+
+    async function openRootSavedFolder() {
+      await fetch('/api/open-root-saved-folder', { method: 'POST' });
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        const items = data.items || [];
+        document.getElementById('historyCountBadge').textContent = items.length;
+
+        const container = document.getElementById('historyTableArea');
+        if (items.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted);padding:0.75rem;font-size:0.78rem;">Nenhuma coleta salva no disco ainda.</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID / Data</th>
+                <th>Página / URL</th>
+                <th>Motor</th>
+                <th>Categorias Salvas</th>
+                <th>Volume</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => {
+                const opts = item.options_saved || {};
+                const badges = [];
+                if (opts.save_clean_content) badges.push('Limpo');
+                if (opts.save_original_html) badges.push('HTML');
+                if (opts.save_visual_capture) badges.push('Visual');
+                if (opts.save_tables_links) badges.push('Tabelas/Links');
+                if (opts.save_media_files) badges.push('Mídias');
+                const kb = ((item.total_size_bytes || 0) / 1024).toFixed(1);
+                return `
+                  <tr>
+                    <td><strong>#${item.id}</strong><br/><small style="color:var(--text-muted)">${escapeHtml(item.saved_at)}</small></td>
+                    <td>
+                      <strong>${escapeHtml(item.title || item.domain)}</strong><br/>
+                      <a href="${escapeHtml(item.start_url)}" target="_blank" style="color:var(--text-secondary);font-size:0.73rem;">${escapeHtml(item.start_url)}</a>
+                    </td>
+                    <td><span class="tag-pill">${escapeHtml(item.engine_used)}</span></td>
+                    <td>${badges.map(b => `<span class="tag-pill" style="margin:2px;display:inline-block;">${b}</span>`).join('')}</td>
+                    <td>${(item.files_saved || []).length} arq • ${kb} KB</td>
+                    <td>
+                      <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                        <button type="button" class="btn-chip" onclick="openFolderById(${item.id})">Pasta</button>
+                        <a class="btn-chip" style="text-decoration:none;" href="/api/history/${item.id}/zip" target="_blank">ZIP</a>
+                        <button type="button" class="btn-chip" onclick="crawlThisUrl('${escapeHtml(item.start_url)}')">Re-varrer</button>
+                        <button type="button" class="btn-chip" style="color:#fca5a5;" onclick="deleteHistoryById(${item.id})">Excluir</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function openFolderById(id) {
+      await fetch(`/api/history/${id}/open-folder`, { method: 'POST' });
+    }
+
+    async function deleteHistoryById(id) {
+      await fetch(`/api/history/${id}`, { method: 'DELETE' });
+      loadHistory();
+    }
+
+    function openFullScreenshot(dataUri) {
+      document.getElementById('modalScreenshotImg').src = dataUri;
+      document.getElementById('screenshotModal').showModal();
+    }
+
+    function downloadCurrentPdf() {
+      if (!currentJob || !currentJob.pages?.length) return;
+      const selVal = Math.max(0, parseInt(document.getElementById('crawledPageSelect')?.value || '0', 10));
+      const page = currentJob.pages[selVal] || currentJob.pages[0];
+      if (!page.pdf_b64) return;
+      const byteCharacters = atob(page.pdf_b64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'pagina_visual.pdf';
+      link.click();
+    }
+
+    function copyTextFromEl(elId) {
+      const txt = document.getElementById(elId)?.textContent || '';
+      navigator.clipboard.writeText(txt);
+      showBanner('Conteúdo copiado para a área de transferência.', 'success');
+    }
+
+    function downloadQuickBlob(elId, filename, mime) {
+      const txt = document.getElementById(elId)?.textContent || '';
+      const blob = new Blob([txt], { type: mime + ';charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function toggleAllMediaChecks(state) {
+      document.querySelectorAll('.media-item-checkbox').forEach(cb => {
+        cb.checked = state;
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>
